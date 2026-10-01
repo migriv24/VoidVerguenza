@@ -1,0 +1,20 @@
+# Build output
+build/
+build-*/
+out/
+
+# Anything a running Verguenza writes. A vault is never committed, real or test.
+*.vault
+*.verguenza
+vaults/
+identity/
+*.key
+*.sealed
+
+# Correspondence with sibling projects: relayed by the author, folded into the log
+MESSAGE_FOR_*.md
+
+# Editors
+.vs/
+.vscode/
+*.swp

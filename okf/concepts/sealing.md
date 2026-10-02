@@ -81,12 +81,12 @@ Read in Void Palabra's vendored copy (microReticulum `40fa628`, the Crypto fork
 | seal to a device, open a seal | `Identity.encrypt` / `decrypt` | **present**; **not exposed** |
 | symmetric encryption | `Token` (AES-256-CBC + HMAC-SHA256) | **present**; **not exposed**. Its MAC check compares with an early-exit comparison, not in constant time |
 | SHA-256, HKDF, HMAC | present | **not exposed** |
-| **randomness fit for keys** | the Crypto library's `RNG` | **not fit, today** (below) |
+| **randomness fit for keys** | the Crypto library's `RNG`, now seeded from the OS by Palabra | **fixed 2026-10-01** (below); identities made before then are weak |
 | **a password-hardening function** (Argon2id, scrypt) for keys at rest under a passphrase | **none** | gap: [Q12](/developer_questions.md) |
 | **wipeable, lockable memory** | none; its `Bytes` type copies freely and never wipes | gap: below |
 | **threshold sharing** | none (neither does libsodium) | [Q1](/developer_questions.md) |
 
-## Randomness: measured, and not fit for keys
+## Randomness: was not fit for keys; fixed in Palabra 2026-10-01
 
 On a desktop or an Android build, the Crypto library's random generator is seeded
 from **fixed constants, the string "Reticulum", and the time the binary was
@@ -101,15 +101,24 @@ Measured: two fresh nodes started a second apart produced different identities, 
 the clock does vary the output. But the clock is uptime, which an attacker can often
 estimate, and each injection is at most 32 bits. **Estimated, not measured**: the
 identity keys and every link's ephemeral keys of a Void device are within reach of
-an offline search. This is Palabra's to fix (stir operating-system entropy into the
-generator at start and periodically, through its public `stir` call, without
-patching), and it blocks every key Verguenza would make. Reported:
-`MESSAGE_FOR_VOIDPALABRA_verguenza-reticulum-randomness-2026-10-01.md`.
+an offline search. Worse, Palabra's `Node::start` made the identity *before*
+Reticulum's constructor seeded anything, from constants alone.
 
-**Until it is fixed, Verguenza makes no key with it.** No output test can prove a
-generator unpredictable (today's already passes "two runs differ"), so phase 0's
-check is about the source: Verguenza's configure step looks for Palabra's
-entropy-seeding call and refuses to build the parts that make keys without it.
+**Fixed in Void Palabra, 2026-10-01, by a Verguenza session under the author's
+grant** (Palabra's defect 11; its log and `okf/concepts/reticulum.md`). `Node::start`
+now seeds the generator from the operating system (`BCryptGenRandom`, `getrandom`,
+`arc4random_buf`) **before** the identity is loaded or made, refuses to start without
+it, and re-seeds every five minutes; through the Crypto library's public `stir`, no
+patch. `Node::entropy_source()` names the source, and Palabra's `reticulum_entropy`
+test checks the wiring. All 26 of Palabra's tests pass with it, including interop
+with the Python reference.
+
+**What Verguenza still does about it.** No output test can prove a generator
+unpredictable, so the check is on the source: Verguenza's configure step requires
+`Node::entropy_source()` to exist and its start-up refuses to make keys if it returns
+empty. **Identities made before the fix keep their weak keys**; a Verguenza device
+always makes a fresh identity when it first joins a vault rather than adopting an
+existing Palabra identity file of unknown age.
 
 ## Plaintext in memory
 

@@ -303,3 +303,22 @@ lean for now** (Q1, Q4, Q5, Q6, Q7, Q8, Q10, Q12, Q13, Q14, Q16, Q17), kept list
 entry. Notable consequences: Q12's lean keeps **libsodium for Argon2id only**, on
 desktops, as the one exception ground rule 3 allows; Q14's lean takes Verguenza's own
 randomness from the operating system.
+
+# Palabra's random generator fixed (2026-10-01)
+
+**First use of the author's grant to edit Void Palabra.** Reticulum's generator is now
+seeded from the operating system in `Node::start`, **before** the identity is loaded
+or made (that ordering was a second defect, found while fixing the first: Palabra
+created the identity before anything seeded the generator), re-seeded every five
+minutes, and named by `Node::entropy_source()`. A new test, `reticulum_entropy`, and
+Palabra's full suite (26/26, with Python-reference interop and the lossy tests) pass.
+Recorded in Palabra's own log and `reticulum.md` as **defect 11**. Two smaller findings
+(the non-constant-time MAC check, `randomnum()`) are listed there, not yet fixed.
+**Not committed in Palabra** yet: the author decides.
+
+The relay draft `MESSAGE_FOR_VOIDPALABRA_verguenza-reticulum-randomness-2026-10-01.md`
+is superseded by the edit and deleted; the identity-operations message stays, as the
+plan for the next Palabra edit. Verguenza trued up: [sealing](/concepts/sealing.md),
+[boundary](/concepts/boundary.md), [threat model](/concepts/threat-model.md),
+[roadmap](/roadmap.md). A consequence for the family, in Palabra's log: **identities
+made before the fix keep weak keys** and should be replaced by Hormiga and Maiz.

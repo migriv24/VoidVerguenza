@@ -32,7 +32,7 @@ everything else. When a need could be stated without the words *person*, *secret
 | sealing a key to a device | **Reticulum** (`Identity.encrypt` / `decrypt`: an ephemeral X25519 exchange, HKDF, then an AES-256-CBC + HMAC-SHA256 token) | it is Reticulum's own *encrypt to a destination*, which is what a seal is |
 | encrypting a value | **Reticulum**'s token, under a random key | the same construction as above, without the key exchange |
 | hashing, content addresses | **Reticulum**'s SHA-256, which is also Palabra's | one hash across the family |
-| randomness for identity keys | **Reticulum**, *once Palabra fixes it* | today it is not fit for keys ([sealing](/concepts/sealing.md) §"Randomness") |
+| randomness for identity keys | **Reticulum**, seeded from the OS by **Palabra** (fixed 2026-10-01) | it was not fit for keys before ([sealing](/concepts/sealing.md) §"Randomness") |
 | randomness for what Verguenza makes (value keys, nonces, ids) | **the operating system**, through `verguenza_platform` (lean, [Q14](/developer_questions.md)) | the facility Reticulum itself should be stirring from; not a primitive anyone writes |
 | moving bytes between devices; presence; announces | **Reticulum** links, through **Palabra**'s `Node` | decided for the whole family, 2026-09-23 |
 | history: a change naming its causes by hash | **Palabra** ([utterances, the history graph](/concepts/trust.md)) | Palabra re-invented version control without a line; Verguenza's record is that, not a second one |
@@ -68,7 +68,7 @@ everything else. When a need could be stated without the words *person*, *secret
 
 Drafted as messages at the repository root (ground rule 7):
 
-1. **Randomness fit for keys**, before anything else
+1. ~~Randomness fit for keys~~: **done 2026-10-01** under the author's grant
    ([sealing](/concepts/sealing.md)).
 2. **The identity's operations, through Palabra's header**: sign, verify against a
    public key, seal to a public key, open, random bytes, a token with a given key,

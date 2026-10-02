@@ -38,7 +38,7 @@ timestamp: 2026-10-01T00:00:00Z
 | **Faked presence** | "present" means the approval came through a local interface; whoever controls the network can fake that |
 | **Every device that knows a secret lost, and no cold holder** | that secret is lost by design. A recovery that works without them is a backdoor — [recovery](/concepts/recovery.md) |
 | **A forgotten passphrase (if [Q12](/developer_questions.md) chooses one)** | that device is lost; the group re-admits the person on a new one ([recovery](/concepts/recovery.md)) |
-| **Predictable keys from Reticulum's random generator, until Palabra seeds it from the operating system** | not defended by Verguenza, and so Verguenza makes no keys until it is fixed — [sealing](/concepts/sealing.md) §"Randomness" |
+| **Predictable keys from a Reticulum identity made before Palabra's fix (2026-10-01)** | not defended for old identities; Verguenza makes a fresh identity when a device first joins a vault, and Palabra now seeds from the operating system — [sealing](/concepts/sealing.md) §"Randomness" |
 | **Windows paging memory to disk, or the clipboard history** | requested against, not guaranteed |
 | **Another program reading the clipboard while a copied value is on it** | any program of the same user may; the 30-second clear shortens the window |
 | **The text field's own copy of a typed value** | Void Maiz's text fields are Dear ImGui's, which keeps a working copy Verguenza cannot wipe. Measured in phase 1 before anything is claimed ([commands](/concepts/commands.md) §"Intake") |

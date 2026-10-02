@@ -10,10 +10,10 @@ timestamp: 2026-10-01T00:00:00Z
 
 **What blocks what, as of 2026-10-01.** The authority model (phase 1, part A) needs
 nothing from anyone and can start now. Everything that makes or uses a key (phase 1,
-part B, onward) waits on two things from Void Palabra: **randomness fit for keys**,
-and **the identity's operations in its header** ([boundary](/concepts/boundary.md)).
-Both are drafted as messages. Ground rule 7 allows the author to grant direct edits
-to a sibling; if that is granted for Palabra, these become Verguenza's own work.
+part B, onward) waits on **the identity's operations in Palabra's header**
+([boundary](/concepts/boundary.md)). Randomness fit for keys was the other blocker,
+and is **fixed** (2026-10-01, Palabra defect 11). The author has granted direct edits
+to Palabra, so the identity operations are Verguenza's own work to do there.
 
 ## Phase 0 — The repository
 
@@ -26,7 +26,7 @@ the checks.
 | step | done when |
 |---|---|
 | 0.1 `CMakeLists.txt`, the five targets as empty shells, the sibling paths | configure succeeds from a clean clone with the siblings beside it, and fails with a clear message without them |
-| 0.2 the configure-time checks on Palabra | configure refuses `VOIDPALABRA_RNS_LOG_LEVEL` ≥ 8; it reports whether Palabra's generator is seeded from the operating system, and the key-making targets are off until it is |
+| 0.2 the configure-time checks on Palabra | configure refuses `VOIDPALABRA_RNS_LOG_LEVEL` ≥ 8; it requires `Node::entropy_source()` (Palabra, 2026-10-01), and the key-making code refuses to run if it is empty |
 | 0.3 `tools/check_okf_links.py`, `tools/check_layering.py`, `tools/check_plaintext_paths.py` | each fails on a deliberately broken input in its own test, and passes on the tree |
 | 0.4 the empty window | `voidverguenza-app` opens a Void Maiz window titled *Void Verguenza* and closes cleanly |
 
@@ -132,7 +132,7 @@ natural answer to [Q12](/developer_questions.md) there.
 | phase | Void Core | Void Maiz | Void Palabra |
 |---|---|---|---|
 | 1A | nothing | nothing | nothing |
-| 1B | nothing new | the shell, widgets; possibly a **secure text field** (if 1B.12 finds ImGui's copy) | **randomness fit for keys; the identity's operations in its header, with caller-owned buffers**; the archive |
+| 1B | nothing new | the shell, widgets; possibly a **secure text field** (if 1B.12 finds ImGui's copy) | randomness fit for keys (**done**); **the identity's operations in its header, with caller-owned buffers**; the archive |
 | 3 | nothing new | `voidmaiz_net` over Reticulum | links and content references (built); signed utterances and capabilities when Palabra builds them ([Q5](/developer_questions.md)) |
 | 4 | nothing new | an inbox surface; notifications on a desktop | — |
 | 5 | nothing new | — | — (threshold sharing is Verguenza's) |

@@ -32,7 +32,7 @@ A **client** is another application enrolled in a vault, recorded in the
 |---|---|
 | `app` | `void-hormiga` |
 | `device` | the device it runs on (a client is per device, like everything that holds keys) |
-| `identity` | the client's own key, made when it enrolled |
+| `identity` | the client's own Reticulum identity (Ed25519 to sign its asks, X25519 to receive values), made when it enrolled |
 | `grant` | which secrets (by name, by tag, or by provider use: *"keys that serve `website`"*), and which operation |
 | `policy` | what each ask requires: nothing (open), the device's person to confirm, or a quorum |
 
@@ -60,9 +60,18 @@ Hormiga                          Verguenza agent (same device)
   │                                │   ├ confirm: ask this device's person
   │                                │   └ quorum: send a request to approvers,
   │                                │     with Hormiga's consequence sentence
-  │◄──────────────────────────────┤  the value, once
-  │  use it, wipe it               │  record a `use` act
+  │                                │  write the `use` act to the signed record
+  │◄──────────────────────────────┤  the value, once, sealed to the
+  │  open it, use it, wipe it      │   client's own X25519 key
 ```
+
+**The value is sealed to the client, and the act comes first** (amended
+2026-10-01). The agent seals the value to the client's own Reticulum identity
+(`Identity.encrypt`) before it leaves, whatever path it takes: a Reticulum link is a transport and
+never the only protection on a value ([quorum](/concepts/quorum.md) §"How a split
+secret opens" gives the reason). And the `use` act is written before the value is
+sent; a use that cannot be recorded is not answered
+([commands](/concepts/commands.md) §"Reveal").
 
 **The consequence sentence travels with the ask.** Hormiga's effects already
 carry one (*"PUBLISHES THE WEBSITE. Whatever is in site/ becomes the live page

@@ -44,15 +44,15 @@ A glyph per kind, because each kind has different fields and a different face:
 | field | means |
 |---|---|
 | `title` | what people call it ("POS back office admin") |
-| `envelope` | the content address of the sealed value (`sha256:…`) |
+| `envelope` | the content address of the latest sealed value (`sha256:…`), **for display only**: the current value is computed from the [signed record](/concepts/trust.md) (the highest valid version), so editing this field cannot roll a secret back |
 | `policy` | the [policy](/concepts/quorum.md) that governs it (open, guarded, split) |
 | `added_by` | the member and device that added it |
 | `rotated` | when the value last changed |
 | `expires` | when it stops working, if known |
 | `tags` | ordinary Void Core tags (`store:downtown`, `vendor:cloudflare`) |
 
-**History of the value.** Rotating a secret writes a new envelope and points the
-rune at it. The old envelope stays in the vault as history for a set time (so a
+**History of the value.** Rotating a secret writes a new envelope (the next
+version) to the signed record, and the rune's display field follows it. The old envelope stays in the vault as history for a set time (so a
 rotation that breaks something can be undone) and is then dropped. How long is a
 policy setting.
 
@@ -89,12 +89,19 @@ Verguenza these belong to the secret:
 | mantle | holds |
 |---|---|
 | `secrets` | one rune per secret (glyph per kind) |
-| `members` | one rune per person: display name, role, joined |
+| `members` | one rune per person: display name, groups, label (computed from capabilities, [authority](/concepts/authority.md)), joined |
 | `devices` | one rune per device: owner, public keys, enrolled by, last seen |
 | `policies` | named policies ([quorum](/concepts/quorum.md)) |
 | `clients` | other applications allowed to ask, and their grants ([clients](/concepts/clients.md)) |
 | `requests` | pending and finished requests for approval, with their approvals (an `act` rune each) |
 
-Envelopes are not runes. They are content-addressed blobs beside the state
-document, the way Void Palabra already carries files a document names but does
-not hold (`VoidPalabra:/concepts/content-reference.md`).
+Envelopes are not runes. They are content-addressed objects in the vault's
+[signed record](/concepts/trust.md), beside the state document, carried the way Void
+Palabra already carries files a document names but does not hold
+(`VoidPalabra:/concepts/content-reference.md`).
+
+**Which of these mantles are authority** (amended 2026-10-01). `members`,
+`devices`, `policies`, `clients` and `requests`, and a secret's `policy` field, are
+**projections** of the signed record: each device rebuilds them from signed objects and
+never decides anything from them. A secret's title, notes, tags and fields are
+ordinary description, merged by Void Palabra like any other document.

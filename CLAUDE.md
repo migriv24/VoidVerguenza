@@ -18,11 +18,20 @@ paths spell it `verguenza`; documents may write *Vergüenza*.
 2. **The repo root is a public artifact.** No secret, no vault file, no test
    fixture holding a real password, no key file, ever, in any commit. Test
    secrets are generated at test time and are obviously fake.
-3. **Cryptography is libsodium only.** Never hand-roll a primitive. Never add a
-   fallback secret, a master backdoor or a "recovery" that works without the
-   people the design says it needs. Where libsodium has no primitive the design
-   needs (threshold sharing), the choice is an open question for the author
-   (`okf/developer_questions.md`), not a quiet implementation.
+3. **Cryptography comes from Reticulum, through Void Palabra** (the author,
+   2026-10-01: *"reticulum as much as possible, not libsodium"*). Never hand-roll
+   a primitive. Never add a fallback secret, a master backdoor or a "recovery"
+   that works without the people the design says it needs. Where Reticulum has
+   no primitive the design needs (a password-hardening function, threshold
+   sharing), the choice is an open question for the author
+   (`okf/developer_questions.md`), not a quiet implementation; libsodium appears
+   only where such a question's answer says so. Operating-system facilities
+   (locked and wiped memory, the system's random generator, the key store) are
+   not primitives and may be called directly.
+3a. **Palabra first.** Anything that can be stated without the words *person*,
+   *secret*, *consent* or *knowledge* (history, merging, storage, transport,
+   identity, capabilities as a mechanism) is Void Palabra's, and Verguenza asks
+   for it rather than building it (`okf/concepts/boundary.md`).
 4. **A plaintext secret lives in memory only, and only as long as it is used.**
    It is never written to the state document, the dispatcher log, a crash
    report, the clipboard for longer than a set time, or a temporary file. Every

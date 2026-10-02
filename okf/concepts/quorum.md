@@ -1,7 +1,7 @@
 ---
 type: Concept
 title: Quorum — actions that need several devices to agree
-description: "The author's 'lan based authentication (such as having multiple devices authenticate an action)', as a design: requests, approvals (signed, time-limited, optionally required to come from devices present on the local network), and policies of k-of-n. Three strengths kept apart and labelled: open, guarded (honest software counts the approvals) and split (the value's key is divided so it cannot be opened without k devices, enforced by mathematics). Which actions need a quorum, how a request reaches approvers with a sentence saying what it will do, social recovery, and what a quorum cannot do."
+description: "The author's 'lan based authentication (such as having multiple devices authenticate an action)', as a design: requests, approvals (signed, time-limited, optionally required to come from devices present on the local network), and policies whose consent is a formula over people and groups (k-of-n is its simplest case). Three strengths kept apart and labelled: open, guarded (honest software counts the approvals) and split (the value's key is divided so it cannot be opened without k devices, enforced by mathematics). Which actions need a quorum, how a request reaches approvers with a sentence saying what it will do, where recovery went, and what a quorum cannot do."
 tags: [status:planned, audience:dev, confidence:asserted]
 timestamp: 2026-10-01T00:00:00Z
 ---
@@ -33,7 +33,12 @@ An approval is a small signed statement:
 - **Signed**, so every device can check it and the [audit](/concepts/audit.md)
   record can prove it.
 - **Time-limited**: an approval for *"reveal the safe code"* given at 9:00 is
-  not good at 17:00. Each policy sets the window (default 10 minutes).
+  not good at 17:00. Each policy sets the window (default 10 minutes). The window
+  is measured on clocks, which devices do not share: for a **guarded** secret the
+  opening device checks `until` against its own clock (software-enforced, and a
+  device with a wrong clock judges wrongly). For a **split** secret the window
+  hardly matters, because a holder sends its share at the moment it approves,
+  not later.
 - **Present or not.** If it arrived over a Reticulum link through a local
   interface (the store's LAN), it is marked `present`. A policy can require
   present approvals: *"two people in the building must agree."* Presence is a
@@ -69,12 +74,20 @@ look alike.
 **How a split secret opens:**
 
 1. The requesting device sends a request to the share holders.
-2. Each holder that approves opens *its* share (its seal) and sends the share to
-   the requester over a Reticulum link: forward-secret, and authenticated by
-   [the device's key](/concepts/people-and-devices.md), so the share reaches only
-   the device that asked.
+2. Each holder that approves opens *its* share (its seal), **seals it again to the
+   requesting device's own identity** (`Identity.encrypt`), signs the result with
+   its approval, and sends it. The Reticulum link it travels over is only a
+   transport.
 3. With k shares, the requester rebuilds the DEK, opens the value, uses it, and
    wipes the DEK and the shares.
+
+**Why step 2 re-seals instead of trusting the link** (amended 2026-10-01). Both
+use Reticulum's cryptography now, so this is no longer about whose primitives: it is
+about **what the protection is attached to**. A link protects bytes while they are on
+that link; a share that is relayed, queued, stored by a keeper, or forwarded by a
+device that is not the requester is outside it. Sealing to the requester's identity
+attaches the protection to the share itself, whatever path it takes. The rule,
+everywhere: **nothing secret relies on the link.**
 
 **What split cannot do.** After step 3 the requester has seen the value. A
 quorum guards *the moment of opening*, not the future. For the most sensitive
@@ -82,40 +95,64 @@ secrets a policy can add *rotate after reveal*: the application reminds the
 group to change the value once it has been used, and marks the secret until
 someone does.
 
-Split needs threshold sharing, which libsodium does not provide. That is
+**Strengthening a policy protects only the next value** (2026-10-01). Moving a
+secret from open or guarded to split re-divides a *new* DEK, but every device that
+held a whole seal for the old one can still open the old envelope, and may already
+have. So the application treats *"make this split"* as *"make this split and
+change the value"*: it writes the new policy, then asks for a new value (and, if the
+old one ever left the vault, for a change at the vendor). A policy change that
+does not rotate is labelled: *"stricter from the next value on; the current value
+was open to N devices."*
+
+Split needs threshold sharing, which neither Reticulum nor libsodium provides. That is
 [Q1](/developer_questions.md).
 
 # Policies
 
-A policy is a rune in the `policies` mantle:
+A policy says **what enforces** an action and **whose agreement** it needs. The
+second part is a **consent formula** over people and groups, not a number
+([authority](/concepts/authority.md), amended 2026-10-01): *k of n* is the simplest
+case, and real groups need others.
 
 | field | example |
 |---|---|
 | `strength` | `open`, `guarded`, `split` |
-| `k`, `of` | `2` of `member`s (or of a named group: `managers`) |
-| `present` | `required` / `preferred` / `no` |
+| `consent` | `2-of(managers)`, `IT ∨ 2-of(managers)`, `bookkeeper ∧ 1-of(owners)` |
+| `present` | `required` / `preferred` / `no`, for the whole formula or one term of it |
 | `window` | `10m` |
 | `rotate_after_reveal` | `yes` / `no` |
-| `self_counts` | does the requester's own approval count toward k |
+| `self_counts` | does the requester's own approval satisfy a term |
 
-**Vault-wide policies** cover actions that are not about one secret:
+A formula counts **people, not devices**, unless it says otherwise: two approvals
+from one person's two devices satisfy one term once.
 
-| action | default policy |
+**Vault-wide policies** cover actions that are not about one secret. The defaults
+below are written with the template names ([authority](/concepts/authority.md)
+§"Labels"); a group replaces them with its own formulas:
+
+| action | default consent |
 |---|---|
-| add or remove a member | admin + 1 more (2 of admins and owners) |
-| enrol a device for an existing member | that member's other device, or an admin |
-| change a policy | the stricter of the old and new policy, plus an admin |
-| export the vault in plaintext | 2 of owners, present |
-| add a client, or widen a grant | an admin |
-| recovery | k of the recovery holders (below) |
+| admit a person to a group | `2-of(that group's admins ∪ owners)` |
+| recall someone's capability, or remove them | **any one** of those whose consent granted it (recall is easier than grant) |
+| enrol a device for an existing person | `that person's other device ∨ 1-of(admins)` |
+| change a policy | the old policy's consent, and the new one's if it is stricter |
+| export the vault in plaintext | `2-of(owners)`, present |
+| grant a client, or widen a grant | `1-of(admins)` |
+| admit a recovered person's new device | as enrolment ([recovery](/concepts/recovery.md)) |
 
 **Changing a policy can never make it weaker without satisfying the old one.**
-Otherwise anyone could lower the bar and then walk under it.
+Otherwise anyone could lower the bar and then walk under it. "Weaker" is exact for
+formulas: the new formula is weaker when some set of people satisfies it and not the
+old one.
 
 # Requests across the network
 
-A request is a rune in the `requests` mantle (an `act`), so it syncs to every
-device like any other change, and the approvals land beside it. Over Reticulum,
+A request is a signed object in the vault's [signed record](/concepts/trust.md), and so
+is each approval; both are projected into the `requests` mantle (an `act` rune
+each) for the inbox and the graph. They sync with the record, and the approvals
+land beside the request. An approval for a vault-wide action (adding a member,
+changing a policy) is also **embedded** in the roster entry it authorizes, so the
+entry carries its own proof. Over Reticulum,
 devices that are present are also told immediately, so an approval can arrive in
 seconds: a phone buzzing in a manager's pocket is the eventual picture (phones
 come later; a desktop's approvals inbox comes first).
@@ -123,21 +160,14 @@ come later; a desktop's approvals inbox comes first).
 A request that is not satisfied within its window **expires**, and the record
 keeps it, with who approved and who did not.
 
-# Social recovery
+# Recovery
 
-If a person forgets their passphrase, or every device of a vault's only owner is
-lost, something must let the group recover, and it must not be a backdoor.
-
-**Lean: recovery is a split secret like any other.** When a vault is created, a
-**recovery key pair** (X25519) is generated. Its public half is one more
-recipient on every envelope: each envelope carries a seal for it, like a seal
-for a device. Its private half is split into shares, one sealed to each of n
-named *recovery holders* (people, through their devices), any k of which rebuild
-it. Recovery is a request that needs k holders to send their shares to a new
-device; that device rebuilds the recovery key, opens the envelopes, re-seals them
-to itself, and wipes the recovery key. No holder alone, and no developer, can
-recover anything. If too many holders are lost, the vault is lost, and the
-application says so when the holders are chosen. [Q4](/developer_questions.md).
+Moved to its own page, [recovery](/concepts/recovery.md), and rethought
+(2026-10-01): recovery is mostly **re-sealing by the people who still know**, with a
+group's consent to admit the new device, and the founding *recovery key* survives
+only as one kind of **cold holder** for the case where nobody who knows a secret is
+left. The finding from the first planning session stands there: no recovery path
+goes around a split secret by default.
 
 # What a quorum is not
 

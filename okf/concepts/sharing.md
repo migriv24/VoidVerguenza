@@ -1,7 +1,7 @@
 ---
 type: Concept
 title: Sharing — sync between the people who share a vault
-description: "How a vault reaches more than one device: Void Palabra's merge over Reticulum links, the same stack every Void application uses. What travels (descriptions, envelopes, signed commands), what never does (private keys, plaintext), why a merge cannot accept an unsigned or wrongly signed change, revocation and its honest limit, working offline, and an always-on node for a group that is not always in one room."
+description: "How a vault reaches more than one device: Void Palabra's merge over Reticulum links, the same stack every Void application uses. What travels (descriptions through the merge; envelopes and every other signed object through the ledger, by union), what never does (private keys, plaintext), why authority cannot live in the merge, revocation and its honest limit, working offline, and an always-on node for a group that is not always in one room."
 tags: [status:planned, audience:dev, confidence:asserted]
 timestamp: 2026-10-01T00:00:00Z
 ---
@@ -25,9 +25,9 @@ trusts, and every device checks before it merges.**
 
 | thing | travels | readable by |
 |---|---|---|
-| secret descriptions, members, devices, policies, clients, requests | yes (the state document) | every member's devices |
-| envelopes | yes (content-addressed blobs, Palabra's content references) | only the devices each is sealed to |
-| approvals and the signed log | yes | every member's devices |
+| secret descriptions | yes (the state document, Palabra's merge) | every member's devices |
+| the signed record: people, devices, groups, capabilities, requests, approvals, acts | yes (content-addressed objects, Palabra's content references; never removed by sync) | every member's devices |
+| envelopes (signed objects too) | yes | only the devices each is sealed to can open the value |
 | a device's private keys | **never** | — |
 | a plaintext value | **never** | — |
 
@@ -35,24 +35,31 @@ A network observer sees Reticulum traffic between the vault's devices and
 nothing else: Reticulum carries no source addresses and seals links. A member
 sees what members see. Only a device a secret is sealed to can open it.
 
-# Signed changes
+# Signed changes: the signed record, not the merge
 
-Void Palabra's merge accepts any well-formed change by design; it is a library
-about convergence, not permission (`VoidPalabra:/concepts/reticulum.md`:
-*"Reticulum answers who is this. It never answers may they."*). So Verguenza
-puts the permission check in front of it:
+The founding version of this section put a signature-and-role check in front of
+Void Palabra's merge. That cannot work as written (amended 2026-10-01): Palabra
+syncs whole merged documents rather than signed deltas, a remove in a merged
+document cannot be attributed to anyone, and checking a change against roles that
+are still merging gives different devices different verdicts
+(`VoidPalabra:/design/open-questions.md` §6.1, findings 1, 3 and 5).
 
-- Every command a device makes is signed by that device.
-- Before merging a peer's changes, a device checks each signature against the
-  `devices` mantle **as it stood when the change was made**, and checks the
-  signer's role allowed it (adding a member needs an admin, and the policy's
-  approvals).
-- A change that fails is not merged, and the device records that it was
-  offered one. A device offering bad changes repeatedly is shown to the members.
+So authority does not travel in the merge at all. It travels in the vault's
+**[signed record](/concepts/trust.md)**: signed objects (people, devices,
+capabilities, envelopes, requests, approvals, acts) carried by Palabra, never
+removed by sync, each judged by its own causal past the same way on every device. The merged document carries
+descriptions, which open nothing, and a projection of the record that each device
+rebuilds for itself.
 
-This is the "who may" layer Void Palabra deliberately left to applications. It
-is also a candidate to move into Palabra once a second application needs signed
-merges. [Q5](/developer_questions.md).
+- Every object a device makes is signed by that device.
+- A device checks each object it receives against the roster as it stood at the
+  heads the object names, and keeps it either way: a refused object is kept as
+  evidence and given no authority.
+- A device offering objects that fail their signature (not merely ones that are
+  unauthorized, which honest concurrency produces) is shown to the members.
+
+This is the "who may" layer Void Palabra deliberately left to applications.
+The mechanism is Palabra's; the rules are Verguenza's ([boundary](/concepts/boundary.md), [Q5](/developer_questions.md)).
 
 # Revocation, and its honest limit
 
@@ -78,8 +85,9 @@ or expires, while approvers are away.
 
 A store's staff are in the building; a vault's owner may not be. Reticulum
 reaches across the internet through a **transport node**: an always-on device
-(a small computer in the back office) that relays links. It holds the vault's
-envelopes like any member device would if it is enrolled as one, or relays
-without holding anything if it is only a Reticulum relay. **Lean: a relay that
-holds nothing.** A device that is always on and unattended is the worst place to
-keep seals.
+(a small computer in the back office) that relays links. **Amended 2026-10-01:** it
+should also be a **keeper** ([recovery](/concepts/recovery.md)): it holds the replica
+and every envelope, and **no seals**. So a device joining at 3 a.m. can sync from it,
+and stealing it yields what stealing a bundle yields: names and sealed bytes. A
+device that is always on and unattended is still the worst place to keep a seal, so
+it never gets one.

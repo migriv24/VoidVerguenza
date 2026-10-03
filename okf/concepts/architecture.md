@@ -28,6 +28,50 @@ only what is about people and secrets.
 open, hash and random call goes to Palabra's Reticulum companion. A grep for cipher
 or curve names in Verguenza's own sources is part of the layering check.
 
+# The code layout: hexagonal
+
+The author, 2026-10-01: *"organize things into folders and a modular hexagonal
+structure (already semi provided by the void core)"*, and *"we likely don't need to do
+too much for the desktop application that uses void maiz. The core foundations and
+logic will likely be taking up more scripts and modules."*
+
+So the domain sits in the middle and knows nothing outside itself; everything it needs
+from the world is a **port** (an interface it declares), and every way of meeting that
+need is an **adapter** in its own folder. Void Core already works this way (its holidays
+and effect handler are ports; hosts are adapters), so the shape is the family's.
+
+```
+src/
+  foundation/            the domain: voidverguenza (std only; no Palabra, Core, Maiz)
+    core/                bytes, hex, little-endian codec, results
+    ports/               crypto, secure memory: what the domain needs from outside
+    secret/              SecretBuffer: the one type that holds a plaintext
+    record/              signed objects (the frame, signing, the record and its rules)
+    sealing/             envelopes: seal, open, reseal
+    access/              consent formulas, capabilities, groups (phase 1A)
+    secrets/             secret kinds and their fields (the application's glyphs)
+  application/           use cases (verguenza_app): the vault service, its ports
+    ports/               vault store, key store, clipboard, model (Void Core)
+  adapters/              each meets a port, each its own library
+    reticulum/           crypto port, through Palabra's crypto.hpp
+    storage/             vault store port, as a Palabra Archive (the .verguenza file)
+    model/               model port, through Void Maiz's embedded Void Core
+    platform/win32/      secure memory, clipboard, key store (DPAPI)
+  desktop/               the Void Maiz window: thin, screens only
+tests/                   one folder per layer, plus shared fakes
+tools/                   the checks
+```
+
+**Dependencies point inward only**: `desktop → application → foundation`, and
+`adapters → (application ports | foundation ports)`. The foundation includes nothing
+from `application/`, `adapters/` or `desktop/`; the application includes nothing from
+`adapters/` or `desktop/`. `tools/check_layering.py` enforces exactly this.
+
+**Correction (2026-10-01):** the table above says `voidverguenza` links Palabra. In the
+hexagonal layout it does not: cryptography reaches it through the crypto **port**, and
+the Reticulum **adapter** is what links Palabra. That keeps the domain testable with no
+network library, and lets Hormiga supply its own adapter if it ever needs to.
+
 # Layering, checked
 
 `tools/check_layering.py` (Hormiga keeps one; Verguenza writes its own, so its build
@@ -48,15 +92,12 @@ generator is seeded from the operating system ([sealing](/concepts/sealing.md)).
 
 # The one type that may hold a plaintext
 
-```cpp
-// voidverguenza/secret.hpp (sketch)
-class Secret {            // page-aligned, VirtualLock / mlock'd, guard pages where the OS gives them
- public:                  // move-only; destructor wipes (SecureZeroMemory / explicit_bzero) and unlocks
-  template <class F> auto read(F&& f) const;   // readable for the call, no access after (VirtualProtect / mprotect)
-  template <class F> auto write(F&& f);        // writable for the call
-  std::size_t size() const;
-};
-```
+Built as `SecretBuffer` (`src/foundation/secret/secret_buffer.hpp`): memory from the
+installed secure-memory port (on Windows, its own `VirtualAlloc`'d, `VirtualLock`'d pages,
+`SecureZeroMemory`'d on release), move-only, counted, with `data()` and `view()` for the few
+callers that pass it on. The founding sketch's `read`/`write` calls, which would make the
+memory unreadable between uses, are **not built**; the type's header says so, and the
+memory scan (roadmap 1B.12) decides whether they are worth their cost.
 
 - The memory calls are the operating system's, in `verguenza_platform`. That is
   memory handling, not a cryptographic primitive, so ground rule 3 is not in play.

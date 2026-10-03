@@ -1,0 +1,71 @@
+{
+  "manifest": "void/0.1",
+  "name": "voidverguenza",
+  "display_name": "Void Verguenza",
+  "kind": "application",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": "https://github.com/migriv24/VoidVerguenza",
+  "description": "Secrets several people share -- passwords, API keys, recovery codes -- encrypted, local-first, synced over Reticulum, with actions that can require more than one device to approve.",
+  "status": "alpha",
+
+  "requires": [
+    {
+      "name": "voidcore",
+      "kind": "runtime",
+      "version": ">=0.2.14",
+      "sibling": "../VoidCore",
+      "cmake_var": "VOIDCORE_ROOT",
+      "link": "shared",
+      "via": "voidmaiz",
+      "note": "the model and the dispatcher; every change to a vault is a logged dispatcher command. Reached through Void Maiz's add_subdirectory, which links the prebuilt libvoidcore.dll, and that file ships beside voidverguenza-app. The floor is Void Maiz's."
+    },
+    {
+      "name": "voidmaiz",
+      "kind": "runtime",
+      "version": "*",
+      "sibling": "../VoidMaiz",
+      "cmake_var": "VOIDMAIZ_ROOT",
+      "link": "static",
+      "note": "the thin desktop window and the Void Core model adapter; compiled in with add_subdirectory."
+    },
+    {
+      "name": "voidallomone",
+      "kind": "runtime",
+      "version": "*",
+      "sibling": "../VoidAllomone",
+      "cmake_var": "VOIDALLOMONE_ROOT",
+      "link": "static",
+      "via": "voidmaiz",
+      "note": "not used directly; compiled into Void Maiz, so a change to it is a rebuild here."
+    },
+    {
+      "name": "voidpalabra",
+      "kind": "runtime",
+      "version": "*",
+      "sibling": "../VoidPalabra",
+      "cmake_var": "VOIDPALABRA_ROOT",
+      "link": "static",
+      "note": "the archive (storage) and, through its Reticulum companion voidpalabra_reticulum, ALL of Verguenza's cryptography: identities, sealing, OS-seeded randomness. Built by Void Maiz's add_subdirectory and linked directly by the reticulum and storage adapters. Configure fails if the checkout predates include/voidpalabra/crypto.hpp."
+    }
+  ],
+
+  "interacts_with": [],
+
+  "provides": {
+    "gui": "voidverguenza-app",
+    "libraries": ["voidverguenza", "verguenza_app"],
+    "contracts": {
+      "knowledge_bundle": "okf/"
+    }
+  },
+
+  "vendors": [],
+
+  "platforms": ["windows-x64"],
+
+  "update": {
+    "channel": "desktop",
+    "side_by_side": true
+  }
+}

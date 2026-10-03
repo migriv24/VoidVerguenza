@@ -2,11 +2,18 @@
 type: Concept
 title: Formats — the bytes of an envelope and a signed object
 description: "The layouts phase 1 builds, on Reticulum's primitives (amended 2026-10-01): identifiers (a device is its Reticulum identity), the signing rule (a type prefix on everything signed, so no Verguenza signature can pass as another kind, or as a Reticulum announce), the envelope v1 with the header digest inside its token because Reticulum's token has no associated data, the signed-object frame with its causal parents, and readers that refuse rather than guess. Lean until phase 1's exit, when v1 freezes."
-tags: [status:planned, audience:dev, confidence:asserted]
+resource: src/foundation/sealing/envelope.cpp
+tags: [status:current, audience:dev, confidence:measured]
 timestamp: 2026-10-01T00:00:00Z
 ---
 
 # Status of this page
+
+**Implemented 2026-10-01** (`src/foundation/record/object.cpp`,
+`src/foundation/record/fields.cpp`, `src/foundation/sealing/envelope.cpp`; tested in
+`tests/integration/sealing_test.cpp`). One thing the page left open is now fixed: a body
+is **tagged fields** (tag u8, length u32, bytes; tags strictly increasing, so the encoding
+is canonical), the same layout for every type (`record/fields.hpp`).
 
 **Leans, frozen at the end of phase 1.** Until then any field may change. After
 it, a change is a new version (`VGE2`…), and readers keep reading v1. Every layout

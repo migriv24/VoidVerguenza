@@ -322,3 +322,56 @@ plan for the next Palabra edit. Verguenza trued up: [sealing](/concepts/sealing.
 [boundary](/concepts/boundary.md), [threat model](/concepts/threat-model.md),
 [roadmap](/roadmap.md). A consequence for the family, in Palabra's log: **identities
 made before the fix keep weak keys** and should be replaced by Hormiga and Maiz.
+
+# Development starts; no libsodium (2026-10-01)
+
+The author: *"i really dont think we need libsodium if we have reticulum. But let's just
+start with some development, and get a desktop application to test out … organize
+things into folders and a modular hexagonal structure."* **Q12 answered**: the identity
+at rest is protected by the operating system's key store (DPAPI on Windows), with no
+libsodium anywhere; the lock screen states what DPAPI does not stop.
+[Architecture](/concepts/architecture.md) gains the hexagonal layout (foundation with
+ports, application with ports, adapters, a thin desktop) and corrects one line: the
+foundation reaches Reticulum through a port, and only the adapter links Palabra.
+
+**Palabra, second edit under the grant:** `voidpalabra/crypto.hpp`, a Reticulum
+identity's operations without a node (generate, sign, verify, encrypt to an identity,
+decrypt into caller memory, tokens, SHA-256, random), stateless, with its own test.
+Seeding moved to `src/reticulum/rng.cpp`, shared by `Node` and `crypto`.
+
+# The first desktop vault (2026-10-01)
+
+Built on the [hexagonal layout](/concepts/architecture.md), under the author's instruction
+to keep the Maiz window thin and the foundation modular. **Runs on Windows: create a
+vault, add secrets of every kind, hold to reveal, copy with a 30-second clear, set a new
+value, remove, read the audit, lock** (on demand, idle, minimized, on exit).
+
+- **Foundation** (standard library only): bytes and codec, `SecretBuffer`, the crypto and
+  secure-memory ports, signed objects with tagged-field bodies, envelopes v1, the record
+  (held until parents arrive, judged by causal past for membership), consent formulas
+  (1A.3), secret kinds, the generator.
+- **Application**: `VaultService` and its ports (vault store, key store, clipboard, model,
+  clock). The record first, then Void Core commands that never carry a value, then save;
+  a reveal is recorded and saved before anything is decrypted.
+- **Adapters**: Reticulum (Palabra's `crypto.hpp`), the vault file as a Palabra `Archive`,
+  Void Core through `maiz::Core` (quoting by Core's own `vc_arg_quote`), Windows (locked
+  memory, DPAPI, a clipboard that opts out of history and cloud sync).
+- **Desktop**: a composition root and five small screen files.
+
+**Tests** (`ctest -L verguenza`, 8, all passing): the codec, formulas, sealing and the
+record with real crypto, the vault service end to end with real crypto and real Void Core,
+the real adapters on disk, and the three checks. The **plaintext grep** covers the saved
+document, every object, the dispatcher log, and every file the real adapters wrote.
+
+**Found while building:**
+- `create()` locked an open vault before refusing to overwrite an existing one. Fixed:
+  refusals before side effects.
+- The plaintext-path check found eight adapter functions that touched a `SecretBuffer`
+  without saying so; all now do.
+- Void Maiz's headers warn under our flags; the sibling targets are marked `SYSTEM` rather
+  than edited (ground rule 7).
+
+**Not done, and listed in the [roadmap](/roadmap.md)'s progress table:** the CLI, the
+journal-replay check, locking on the operating system's lock and sleep, the people and
+groups screen, the memory scan, and all of phase 1A except formulas.
+[Formats](/concepts/formats.md) is now `status:current`.

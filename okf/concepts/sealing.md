@@ -161,7 +161,7 @@ and the honest options are:
 | option | protects against a copied folder? | on phones | cost |
 |---|---|---|---|
 | **the operating system's key store** (Android Keystore, iOS Keychain / Secure Enclave, Windows DPAPI, macOS Keychain) wrapping the identity file | on phones, yes (hardware-backed, with the device's lock or biometrics); on Windows, **only against other users**: DPAPI opens for anyone logged in as you | **the native way** | per-platform code in `verguenza_platform`; no passphrase to forget |
-| **a passphrase**, hardened by Argon2id from libsodium, kept for that one function | yes, everywhere | works, a second library | the exception to "Reticulum only", in one place |
+| **a passphrase**, hardened by Argon2id from libsodium, kept for that one function | yes, everywhere | works, a second library | **declined by the author** (2026-10-01): no libsodium |
 | **a passphrase**, hardened by PBKDF2 built from Reticulum's HMAC | weakly: PBKDF2 is cheap to attack with GPUs, and composing it ourselves is the hand-rolling ground rule 3 forbids | works | not offered |
 
 **Lock.** After a set idle time, on the operating system's lock or sleep, and on

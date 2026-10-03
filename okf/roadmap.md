@@ -6,7 +6,34 @@ tags: [status:planned, audience:dev, confidence:asserted]
 timestamp: 2026-10-01T00:00:00Z
 ---
 
-**Nothing is built.** Phases are ordered so that each is useful by itself.
+Phases are ordered so that each is useful by itself.
+
+## Progress (2026-10-01)
+
+**A desktop vault for one device runs**, built on the hexagonal layout
+([architecture](/concepts/architecture.md)), with 8 checks in `ctest -L verguenza`.
+What each step stands at, said exactly:
+
+| step | stands at |
+|---|---|
+| 0.1–0.4 the repository, checks, window | **done**: siblings by `add_subdirectory`; configure refuses MSVC, a trace log level ≥ 8, and a Palabra without `crypto.hpp`; the three checks run in ctest |
+| 1A.3 consent formulas | **done**: parse, evaluate, Banzhaf power, "weaker than", monotonicity by property test (`tests/foundation/formula_test.cpp`) |
+| 1A.1–1A.2, 1A.4–1A.9 | **not started** (groups, capabilities, the record's rules 2–4, mandates, templates, knowledge graph, access regions, standing) |
+| 1B.1 `SecretBuffer` | **done, one part deferred**: locked (Windows), wiped, move-only, counted; *not* made unreadable between uses (needs per-page protection; waits for the memory scan) |
+| 1B.2 signing rule and object frame | **done**: on Reticulum through the crypto port; a signature for one type fails as another |
+| 1B.3 envelope v1 | **done**: seal, open, reseal; flipped bytes, truncation, trailing bytes and a body under another header all refused |
+| 1B.4 identity at rest | **done**: DPAPI ([Q12](/developer_questions.md)), tested on disk |
+| 1B.5 the record on Palabra, rule 1 | **done for membership**: held until parents arrive, judged by causal past, current value = highest valid version; the vault file is a Palabra Archive |
+| 1B.6 intake, verbs, projection | **partly**: every verb is a `VaultService` method and every change is a Void Core command that carries no value; **no `verguenza-cli` yet**, and the journal-replay check is not written |
+| 1B.7 reveal, recorded first | **done**: a reveal whose act cannot be saved is refused (tested) |
+| 1B.8 lock | **partly**: on demand, after 5 idle minutes, when minimized, on exit; **not yet** on the operating system's lock or sleep |
+| 1B.9 clipboard | **built, not tested automatically** (a test would overwrite the runner's clipboard): history and cloud exclusion formats; wiped and cleared after 30 s if unchanged |
+| 1B.10 screens | **partly**: lock, secrets, secret detail with hold-to-reveal, new secret or new value with a generator, audit, log; **no people and groups screen** yet |
+| 1B.11 the bundle | **the vault file is the bundle** (a Palabra Archive, with its own history of saves); separate export and import are not built |
+| 1B.12 plaintext grep and memory scan | **grep done**, over the saved document, every object, the command log, and every file the real adapters leave on disk; **memory scan not done** |
+
+The v1 formats are **implemented** ([formats](/concepts/formats.md) is now `current`), and
+stay changeable until phase 1's exit, as planned.
 
 **What blocks what, as of 2026-10-01.** The authority model (phase 1, part A) needs
 nothing from anyone and can start now. Everything that makes or uses a key (phase 1,

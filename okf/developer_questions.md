@@ -71,21 +71,6 @@ quiet change.
   The alternative (a deterministic tiebreak) keeps one admin but lets a stolen
   device win a race by luck.
 
-- **Q12 — What protects a device's identity at rest, without libsodium?**
-  Reticulum has no password-hardening function, and Palabra keeps the identity as a
-  plain file. Options ([sealing](/concepts/sealing.md) §"A device's keys at rest"):
-  (a) the operating system's key store (hardware-backed on phones; on Windows,
-  DPAPI only stops *other* users); (b) a passphrase hardened by Argon2id, keeping
-  libsodium for that one function; (c) a passphrase hardened by PBKDF2 composed
-  from Reticulum's HMAC (not offered: weak, and hand-rolled). **Lean: (a) on
-  phones, where it is the native and stronger answer; (a) + (b) on desktops, with
-  the passphrase on by default**, because *"someone who can log in as me"* is
-  exactly the desktop thief a password manager must stop. This keeps libsodium as
-  one function behind one call, stated in ground rule 3 as the exception. If you
-  would rather have no libsodium at all, (a) alone on desktop is the alternative,
-  and the screen then says what it does not stop. *(Replaces Q2, convenience unlock,
-  and Q9, how libsodium arrives.)*
-
 - **Q13 — Authority defaults.** Four leans from [authority](/concepts/authority.md),
   each a default a group can change:
   1. **Recall is easier than grant**: any one of those whose consent made a grant
@@ -121,6 +106,14 @@ quiet change.
   invented.
 
 # Answered
+
+- **Q12 — What protects a device's identity at rest?** **The operating system's key
+  store; no libsodium at all** (the author, 2026-10-01: *"i really dont think we need
+  libsodium if we have reticulum"*). On Windows that is DPAPI (`CryptProtectData`),
+  which opens for anyone logged in as the person and for no one else; the lock screen
+  says so in words. Phones get their hardware-backed stores when phones come. A
+  passphrase returns only if Reticulum (or the platform) offers a password-hardening
+  function; composing one ourselves stays refused.
 
 - **Q15 — Does the visual application use Void Maiz?** **Yes, the application only**
   (the author, 2026-10-01: *"yes, the visual should use maiz."*). The foundation stays
